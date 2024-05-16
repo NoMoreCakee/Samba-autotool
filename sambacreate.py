@@ -22,7 +22,19 @@ def save_info():
   share_name = input(termcolor.colored('[!] Share name: ', 'cyan'))
   share_path = input(termcolor.colored('[!] Share path: ', 'cyan'))
   share_uname = input(termcolor.colored('[!] Share username: ', 'cyan'))
-  share_passwd = input(termcolor.colored('[!] Share password: ', 'cyan'))
+  share_passwd = None
+  exists = False
+  # check if user is in the system
+  try:
+    subprocess.check_output(f'pdbedit -L | grep {share_uname}', shell=True)
+  except subprocess.CalledProcessError:
+    print(termcolor.colored('[-] User does not exist!', 'red'))
+    return
+  finally:
+    exists = True
+  
+  if not exists:
+    share_passwd = input(termcolor.colored('[!] Share password: ', 'cyan'))
 
   name_regex = r'^[a-zA-Z0-9_-]+$'
   path_regex = r'^[a-zA-Z0-9_\-/\.]+$'
@@ -40,9 +52,11 @@ def save_info():
     print(termcolor.colored('[-] Invalid share username!', 'red'))
     return
   
-  if not re.match(passwd_regex, share_passwd):
-    print(termcolor.colored('[-] Invalid share password!', 'red'))
-    return
+
+  if share_passwd:
+    if not re.match(passwd_regex, share_passwd) and not exists:
+      print(termcolor.colored('[-] Invalid share password!', 'red'))
+      return
   
   if not os.path.exists(share_path):
     print(termcolor.colored('[-] Directory does not exist!', 'red'))
